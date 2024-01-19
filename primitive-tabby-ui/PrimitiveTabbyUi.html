@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primitive Tabby UI</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        #modelList {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 10px;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <label for="apiKey">API Key:</label>
+    <input type="text" id="apiKey" name="apiKey">
+    <label for="contextDropdown">Context size:</label>
+    <select id="contextDropdown">
+        <option value="">Default</option>
+        <option value="4096">4 kilobytes</option>
+        <option value="8192">8 kilobytes</option>
+        <option value="16384">16 kilobytes</option>
+        <option value="32768">32 kilobytes</option>
+        <option value="65536">64 kilobytes</option>
+    </select>
+
+    <button id="listButton">Load model list</button>
+    <button id="unloadButton">Unload current model</button>
+    <ul id="modelList"></ul>
+
+    <script>
+        const apiKeyInput = document.getElementById('apiKey');
+        const listButton = document.getElementById('listButton');
+        const unloadButton = document.getElementById('unloadButton');
+        const modelList = document.getElementById('modelList');
+        const contextDropdown = document.getElementById('contextDropdown');
+
+
+        const apiUrlPrefix = 'http://localhost:5001/v1';
+
+        // Check if API key is already in local storage
+        const storedApiKey = localStorage.getItem('TabbyApiKey');
+
+        // Prefill the text field if key is present
+        if (storedApiKey) {
+            apiKeyInput.value = storedApiKey;
+        }
+
+        // Event listener to update local storage on input change
+        apiKeyInput.addEventListener('input', handleApiKeyInput);
+
+        // Event listener for the Load button
+        listButton.addEventListener('click', listModels);
+
+        // Event listener for the Unload button
+        unloadButton.addEventListener('click', unloadModel);
+
+        function handleApiKeyInput() {
+            const apiKeyValue = apiKeyInput.value;
+            localStorage.setItem('TabbyApiKey', apiKeyValue);
+        }
+
+        function listModels() {
+            const apiKey = apiKeyInput.value;
+            const listApiUrl = `${apiUrlPrefix}/model/list`;
+
+            // Fetch data from the web service
+            fetch(listApiUrl, {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`
+                }
+            })
+                .then(response => response.json())
+                .then(handleListResponse)
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function handleListResponse(data) {
+            // Clear previous list items
+            modelList.innerHTML = '';
+
+            // Iterate through the data array and create li elements
+            data.data.forEach(model => {
+                const listItem = document.createElement('li');
+                listItem.textContent = model.id;
+
+                // Create load button for each model
+                const loadModelButton = document.createElement('button');
+                loadModelButton.textContent = 'Load';
+                loadModelButton.addEventListener('click', () => loadModel(model.id, contextDropdown.value || undefined));
+
+                // Append elements to the list item
+                listItem.appendChild(loadModelButton);
+                modelList.appendChild(listItem);
+            });
+        }
+
+        function loadModel(modelName, maxSeqLen) {
+            const apiKey = apiKeyInput.value;
+            const loadApiUrl = `${apiUrlPrefix}/model/load`;
+
+            if (!apiKey) {
+                return;
+            }
+
+            // POST request to load the model with max_seq_len
+            fetch(loadApiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    name: modelName,
+                    max_seq_len: maxSeqLen,
+                    cache_mode: 'Q4',
+                    cache_size: maxSeqLen
+                })
+            })
+                .then(response => response.json())
+                .then(result => console.log(result))
+                .catch(error => console.error('Error loading model:', error));
+        }
+
+        function unloadModel() {
+            const apiKey = apiKeyInput.value;
+            const unloadApiUrl = `${apiUrlPrefix}/model/unload`;
+
+            // GET request to unload the model
+            fetch(unloadApiUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`
+                }
+            })
+                .then(response => response.json())
+                .then(result => console.log(result))
+                .catch(error => console.error('Error unloading model:', error));
+        }
+
+        listModels();
+    </script>
+
+</body>
+
+</html>
