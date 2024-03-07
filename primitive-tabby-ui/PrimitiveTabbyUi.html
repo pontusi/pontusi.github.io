@@ -153,7 +153,8 @@
                 },
                 body: JSON.stringify({
                     name: modelName,
-                    max_seq_len: maxSeqLen
+                    max_seq_len: maxSeqLen,
+                    cache_mode: 'Q4'
                 })
             })
                 .then(response => response.json())
