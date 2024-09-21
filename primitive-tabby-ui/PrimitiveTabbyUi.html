@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
     <title>Primitive Tabby UI</title>
     <style>
         body {
@@ -49,7 +50,10 @@
 <body>
 
     <label for="apiKey">API Key:</label>
-    <input type="text" id="apiKey" name="apiKey">
+    <input type="text"
+        id="apiKey"
+        name="apiKey">
+
     <label for="contextDropdown">Context size:</label>
     <select id="contextDropdown">
         <option value="">Default</option>
@@ -58,6 +62,13 @@
         <option value="16384">16 kilobytes</option>
         <option value="32768">32 kilobytes</option>
         <option value="65536">64 kilobytes</option>
+    </select>
+
+    <label for="cacheModeDropdown">Cache mode:</label>
+    <select id="cacheModeDropdown">
+        <option value="Q4">Q4</option>
+        <option value="Q6">Q6</option>
+        <option value="Q8">Q8</option>
     </select>
 
     <button id="listButton">Load model list</button>
@@ -70,7 +81,7 @@
         const unloadButton = document.getElementById('unloadButton');
         const modelList = document.getElementById('modelList');
         const contextDropdown = document.getElementById('contextDropdown');
-
+        const cacheModeDropdown = document.getElementById('cacheModeDropdown');
 
         const apiUrlPrefix = 'http://localhost:5001/v1';
 
@@ -123,7 +134,7 @@
                 // Create load button for each model
                 const loadModelButton = document.createElement('button');
                 loadModelButton.textContent = 'Load';
-                loadModelButton.addEventListener('click', () => loadModel(model.id, contextDropdown.value || undefined));
+                loadModelButton.addEventListener('click', () => loadModel(model.id, contextDropdown.value || undefined, cacheModeDropdown.value));
 
                 // Append elements to the list item
                 listItem.appendChild(loadModelButton);
@@ -131,7 +142,7 @@
             });
         }
 
-        function loadModel(modelName, maxSeqLen) {
+        function loadModel(modelName, maxSeqLen, cacheMode) {
             const apiKey = apiKeyInput.value;
             const loadApiUrl = `${apiUrlPrefix}/model/load`;
 
@@ -139,7 +150,7 @@
                 return;
             }
 
-            // POST request to load the model with max_seq_len
+            // POST request to load the model with max_seq_len and cache_mode
             fetch(loadApiUrl, {
                 method: 'POST',
                 headers: {
@@ -149,7 +160,7 @@
                 body: JSON.stringify({
                     name: modelName,
                     max_seq_len: maxSeqLen,
-                    cache_mode: 'Q4',
+                    cache_mode: cacheMode,
                     cache_size: maxSeqLen
                 })
             })
