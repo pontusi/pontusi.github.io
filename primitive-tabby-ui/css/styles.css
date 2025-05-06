@@ -1,0 +1,31 @@
+/* Custom styles for Tabby UI */
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #f1f3f5;
+    font-weight: bold;
+}
+
+.model-card {
+    transition: transform 0.2s ease;
+}
+
+.model-card:hover {
+    transform: translateY(-5px);
+}
+
+.model-name {
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#apiKey {
+    font-family: monospace;
+}
